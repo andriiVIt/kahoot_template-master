@@ -47,7 +47,7 @@ public class Program
         app.GenerateTypeScriptClient("/../client/src/generated-client.ts").GetAwaiter().GetResult();
         app.Services.GetRequiredService<CustomWebSocketServer>().Start(app);
         app.Urls.Clear();
-        app.Urls.Add("http://*:5000"); //making sure the web api doesnt take up port 8080 which is used by the websocket server
+        app.Urls.Add("http://*:5001"); //making sure the web api doesnt take up port 8080 which is used by the websocket server
         app.Run();
     }
 }
