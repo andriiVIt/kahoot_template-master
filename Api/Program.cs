@@ -17,40 +17,62 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder();
 
+        // 1. Налаштування AppOptions (рядок підключення та ін.)
         builder.Services.AddOptionsWithValidateOnStart<AppOptions>()
             .Bind(builder.Configuration.GetSection(nameof(AppOptions)));
 
         var appOptions = builder.Services.AddAppOptions();
 
+        // 2. Реєструємо DbContext з вашим рядком підключення
         builder.Services.AddDbContext<KahootContext>(options =>
         {
             options.UseNpgsql(appOptions.DbConnectionString);
-            options.EnableSensitiveDataLogging();
+            options.EnableSensitiveDataLogging(); // Лише для дебагу (виводить чутливі дані в лог)
         });
+
+        // 3. Seeder для тестових даних (якщо потрібно)
         builder.Services.AddScoped<Seeder>();
 
-
+        // 4. Реєструємо сервіси для WebSocket
         builder.Services.AddSingleton<IGameTimeProvider, GameTimeProvider>();
         builder.Services.AddSingleton<IConnectionManager, DictionaryConnectionManager>();
         builder.Services.AddSingleton<CustomWebSocketServer>();
+
+        // 5. Автоматичне підключення всіх EventHandler з цього Assembly
         builder.Services.InjectEventHandlers(Assembly.GetExecutingAssembly());
-        
+
+        // 6. Підключаємо NSwag (OpenAPI) для генерації TypeScript-клієнта
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddOpenApiDocument(conf =>
         {
             conf.DocumentProcessors.Add(new AddAllDerivedTypesProcessor());
             conf.DocumentProcessors.Add(new AddStringConstantsProcessor());
         });
-        
+
+        // 7. Створюємо та налаштовуємо WebApplication
         var app = builder.Build();
+
+        // 8. Публікуємо OpenAPI (Swagger) + генеруємо TS-клієнт
         app.UseOpenApi();
         app.GenerateTypeScriptClient("/../client/src/generated-client.ts").GetAwaiter().GetResult();
+
+        // 9. Запускаємо WebSocket-сервер
         app.Services.GetRequiredService<CustomWebSocketServer>().Start(app);
+
+        // 10. (Опційно) Викликаємо Seeder, щоб створити тестову гру
+        // Закоментуйте, якщо не потрібно
+        using (var scope = app.Services.CreateScope())
+        {
+            var seeder = scope.ServiceProvider.GetRequiredService<Seeder>();
+            var gameId = seeder.SeedDefaultGameReturnId().GetAwaiter().GetResult();
+            Console.WriteLine($"Seeded default game with ID: {gameId}");
+        }
+
+        // 11. Задаємо порт для Web API (щоб не конфліктувати з портом WebSocket)
         app.Urls.Clear();
-        app.Urls.Add("http://*:5001"); //making sure the web api doesnt take up port 8080 which is used by the websocket server
+        app.Urls.Add("http://*:5001");
+
+        // 12. Запускаємо додаток
         app.Run();
     }
 }
-
-//if you get: No action descriptors found. This may indicate an incorrectly configured application or missing application parts. To learn more, visit https://aka.ms/aspnet/mvc/app-parts
-//Then it's just because it looks for controller but doesn't find any. This doesn't matter because we're making websockets.

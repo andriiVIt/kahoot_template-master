@@ -12,15 +12,61 @@ import { BaseDto } from 'ws-request-hook';
 
 
 
+export interface ServerSendsQuestionDto extends BaseDto {
+    questionId?: string;
+    questionText?: string;
+    options?: QuestionOptionDto[];
+}
+
+export interface QuestionOptionDto {
+    optionId?: string;
+    optionText?: string;
+}
+
+export interface ClientAnswersQuestionDto extends BaseDto {
+    gameId?: string;
+    questionId?: string;
+    selectedOptionId?: string;
+}
+
 export interface MemberHasLeftDto extends BaseDto {
     memberId?: string;
 }
 
-export interface ClientEntersLobbyDto extends BaseDto {
+export interface ServerShowsResultsDto extends BaseDto {
+    results?: PlayerAnswerResult[];
+}
+
+export interface PlayerAnswerResult {
+    playerId?: string;
+    selectedOptionId?: string | undefined;
+    isCorrect?: boolean;
 }
 
 export interface ServerPutsClientInLobbyAndBroadcastsToEveryoneDto extends BaseDto {
-    allClientIds?: string[];
+    allPlayers?: PlayerInfoDto[];
+}
+
+export interface PlayerInfoDto {
+    id?: string;
+    nickname?: string;
+}
+
+export interface AdminRequestsEndQuestionDto extends BaseDto {
+    gameId?: string;
+    questionId?: string;
+}
+
+export interface AdminRequestsNextQuestionDto extends BaseDto {
+    gameId?: string;
+}
+
+export interface AdminStartsGameDto extends BaseDto {
+    gameId?: string;
+}
+
+export interface ClientEntersLobbyDto extends BaseDto {
+    nickname?: string;
 }
 
 export interface ServerConfirmsDto extends BaseDto {
@@ -31,12 +77,24 @@ export interface ServerSendsErrorMessageDto extends BaseDto {
     error?: string;
 }
 
+export interface ServerTellsPlayersGameStartedDto extends BaseDto {
+    gameId?: string;
+    eventType?: string;
+}
+
 /** Available eventType constants */
 export enum StringConstants {
+    ServerSendsQuestionDto = "ServerSendsQuestionDto",
+    ClientAnswersQuestionDto = "ClientAnswersQuestionDto",
     MemberHasLeftDto = "MemberHasLeftDto",
-    ClientEntersLobbyDto = "ClientEntersLobbyDto",
+    ServerShowsResultsDto = "ServerShowsResultsDto",
     ServerPutsClientInLobbyAndBroadcastsToEveryoneDto = "ServerPutsClientInLobbyAndBroadcastsToEveryoneDto",
+    AdminRequestsEndQuestionDto = "AdminRequestsEndQuestionDto",
+    AdminRequestsNextQuestionDto = "AdminRequestsNextQuestionDto",
+    AdminStartsGameDto = "AdminStartsGameDto",
+    ClientEntersLobbyDto = "ClientEntersLobbyDto",
     ServerConfirmsDto = "ServerConfirmsDto",
     ServerSendsErrorMessageDto = "ServerSendsErrorMessageDto",
+    ServerTellsPlayersGameStartedDto = "ServerTellsPlayersGameStartedDto",
 }
 
