@@ -20,8 +20,7 @@ namespace Api.EventHandlers
                 await connectionManager.AddToTopic("game-" + dto.GameId, memberId);
             }
 
-            // 3. Розсилаємо "ServerTellsPlayersGameStartedDto" усім у "game-{dto.GameId}"
-            // Тепер client-side зможе слухати "ServerTellsPlayersGameStarted" як подію
+             
             await connectionManager.BroadcastToTopic(
                 "game-" + dto.GameId,
                 new ServerTellsPlayersGameStartedDto
