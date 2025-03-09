@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useWsClient } from "ws-request-hook";
 // @ts-ignore
-// @ts-ignore
 import {AdminStartsGameDto, AdminRequestsNextQuestionDto, PlayerInfoDto, ServerPutsClientInLobbyAndBroadcastsToEveryoneDto,} from "src/generated-client";
 
 export default function AdminPanel() {
     const { send, onMessage, readyState } = useWsClient();
 
-    // Зберігаємо список гравців (PlayerInfoDto), які повертає сервер (з тієї ж події)
+    // Список гравців, які повертаються з бекенду
     const [lobbyPlayers, setLobbyPlayers] = useState<PlayerInfoDto[]>([]);
     const [timer, setTimer] = useState(0);
 
-    // Слухаємо повідомлення, щоб оновити список гравців у лобі
+    // Слухаємо подію оновлення списку гравців у лобі
     useEffect(() => {
         const unsubscribe = onMessage(
             "ServerPutsClientInLobbyAndBroadcastsToEveryoneDto",
             (data) => {
+                console.log("Received lobby update:", data);
                 const casted = data as ServerPutsClientInLobbyAndBroadcastsToEveryoneDto;
                 setLobbyPlayers(casted.allPlayers ?? []);
             }
@@ -23,6 +23,34 @@ export default function AdminPanel() {
         return () => unsubscribe();
     }, [onMessage]);
 
+    useEffect(() => {
+        // Додамо адміна до топіку "lobby" при старті адмін-панелі
+        // (якщо це необхідно для тесту)
+        const joinAsAdmin = () => {
+            if (readyState !== 1) return;
+            const dto = {
+                eventType: "ClientEntersLobbyDto",
+                requestId: crypto.randomUUID(),
+                nickname: "Admin", // або будь-який нік для адміна
+            };
+            send(dto);
+        };
+        joinAsAdmin();
+    }, [readyState, send]);
+    useEffect(() => {
+        const unsubscribe = onMessage(
+            "ServerPutsClientInLobbyAndBroadcastsToEveryoneDto",
+            (data) => {
+                const casted = data as ServerPutsClientInLobbyAndBroadcastsToEveryoneDto;
+                // Фільтруємо, щоб не показувати гравця з нікнеймом "Admin"
+                const filteredPlayers = (casted.allPlayers ?? []).filter(
+                    (player: { nickname: string; }) => player.nickname !== "Admin"
+                );
+                setLobbyPlayers(filteredPlayers);
+            }
+        );
+        return () => unsubscribe();
+    }, [onMessage]);
     // Логіка таймера: якщо timer > 0, зменшуємо на 1 щосекунди
     useEffect(() => {
         // @ts-ignore
@@ -42,7 +70,18 @@ export default function AdminPanel() {
         const dto: AdminStartsGameDto = {
             eventType: "AdminStartsGameDto",
             requestId: crypto.randomUUID(),
+            gameId: "game-001", // або GUID
+        };
+        console.log("Sending AdminStartsGameDto:", dto);
+        send(dto);
+    };
+    const endQuestion = () => {
+        if (readyState !== 1) return;
+        const dto = {
+            eventType: "AdminRequestsEndQuestionDto",
+            requestId: crypto.randomUUID(),
             gameId: "game-001",
+            questionId: "currentQuestionId" // потрібно якось зберігати поточне питання
         };
         send(dto);
     };
@@ -54,6 +93,7 @@ export default function AdminPanel() {
             requestId: crypto.randomUUID(),
             gameId: "game-001",
         };
+        console.log("Sending AdminRequestsNextQuestionDto:", dto);
         send(dto);
         setTimer(10); // Наприклад, 10-секундний таймер
     };
@@ -111,7 +151,7 @@ export default function AdminPanel() {
                 )}
             </div>
 
-            <div style={{ textAlign: "center" }}>
+            <div style={{textAlign: "center"}}>
                 <button
                     onClick={startGame}
                     style={{
@@ -141,6 +181,9 @@ export default function AdminPanel() {
                     }}
                 >
                     Next Question
+                </button>
+                <button onClick={endQuestion}>
+                    End Question
                 </button>
             </div>
 

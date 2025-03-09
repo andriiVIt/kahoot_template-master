@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Api.WebSockets;
 using Fleck;
 using WebSocketBoilerplate;
-using System.Threading.Tasks;
 
 namespace Api.EventHandlers
 {
@@ -15,26 +14,26 @@ namespace Api.EventHandlers
     {
         public override async Task Handle(AdminRequestsEndQuestionDto dto, IWebSocketConnection socket)
         {
-            // Очікуємо 15 секунд перед обчисленням результатів
-            await Task.Delay(15 * 1000);
+            // 1. (Опційно) Чекаємо 15 секунд перед обчисленням
+            await Task.Delay(15_000);
 
-            // 1. Отримати всі відповіді на питання з БД
+            // 2. Знаходимо всі відповіді гравців для цього питання
             var answers = await context.PlayerAnswers
                 .Where(x => x.QuestionId == dto.QuestionId)
                 .ToListAsync();
 
-            // 2. Отримати варіанти для питання
+            // 3. Завантажити варіанти відповіді (щоб визначити, які з них правильні)
             var questionOptions = await context.QuestionOptions
                 .Where(o => o.QuestionId == dto.QuestionId)
                 .ToListAsync();
 
-            // 3. Визначити, які варіанти є правильними
+            // 4. Визначити, які варіанти є правильними
             var correctIds = questionOptions
                 .Where(o => o.IsCorrect)
                 .Select(o => o.Id)
                 .ToHashSet();
 
-            // 4. Сформувати список результатів для кожного гравця
+            // 5. Сформувати список результатів
             var results = answers.Select(a => new PlayerAnswerResult
             {
                 PlayerId = a.PlayerId,
@@ -42,14 +41,18 @@ namespace Api.EventHandlers
                 IsCorrect = a.SelectedOptionId != null && correctIds.Contains(a.SelectedOptionId)
             }).ToList();
 
-            // 5. Розіслати результати всім гравцям у кімнаті гри
-            await connectionManager.BroadcastToTopic("game-" + dto.GameId, new ServerShowsResultsDto
-            {
-                requestId = dto.requestId,
-                Results = results
-            });
+            // 6. Розіслати результати усім гравцям у "game-<GameId>"
+            await connectionManager.BroadcastToTopic(
+                "game-" + dto.GameId,
+                new ServerShowsResultsDto
+                {
+                    requestId = dto.requestId,
+                    // eventType вже = "ServerShowsResultsDto"
+                    Results = results
+                }
+            );
 
-            // 6. Позначити питання як "answered" і зберегти зміни
+            // 7. Позначити питання як Answered = true
             var question = await context.Questions.FindAsync(dto.QuestionId);
             if (question != null)
             {
@@ -57,26 +60,12 @@ namespace Api.EventHandlers
                 await context.SaveChangesAsync();
             }
 
-            // 7. Надіслати підтвердження адміністратору
+            // 8. Надсилаємо підтвердження адміністратору (не обов’язково)
             socket.SendDto(new ServerConfirmsDto
             {
                 requestId = dto.requestId,
                 Success = true
             });
         }
-    }
-
-    // DTO для передачі результатів
-    public class ServerShowsResultsDto : BaseDto
-    {
-        public List<PlayerAnswerResult> Results { get; set; } = new();
-    }
-
-    // Результат для кожного гравця
-    public class PlayerAnswerResult
-    {
-        public string PlayerId { get; set; } = null!;
-        public string? SelectedOptionId { get; set; }
-        public bool IsCorrect { get; set; }
     }
 }

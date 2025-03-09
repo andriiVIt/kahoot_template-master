@@ -33,16 +33,6 @@ export interface MemberHasLeftDto extends BaseDto {
     memberId?: string;
 }
 
-export interface ServerShowsResultsDto extends BaseDto {
-    results?: PlayerAnswerResult[];
-}
-
-export interface PlayerAnswerResult {
-    playerId?: string;
-    selectedOptionId?: string | undefined;
-    isCorrect?: boolean;
-}
-
 export interface ServerPutsClientInLobbyAndBroadcastsToEveryoneDto extends BaseDto {
     allPlayers?: PlayerInfoDto[];
 }
@@ -77,6 +67,17 @@ export interface ServerSendsErrorMessageDto extends BaseDto {
     error?: string;
 }
 
+export interface ServerShowsResultsDto extends BaseDto {
+    eventType?: string;
+    results?: PlayerAnswerResult[];
+}
+
+export interface PlayerAnswerResult {
+    playerId?: string;
+    selectedOptionId?: string | undefined;
+    isCorrect?: boolean;
+}
+
 export interface ServerTellsPlayersGameStartedDto extends BaseDto {
     gameId?: string;
     eventType?: string;
@@ -87,7 +88,6 @@ export enum StringConstants {
     ServerSendsQuestionDto = "ServerSendsQuestionDto",
     ClientAnswersQuestionDto = "ClientAnswersQuestionDto",
     MemberHasLeftDto = "MemberHasLeftDto",
-    ServerShowsResultsDto = "ServerShowsResultsDto",
     ServerPutsClientInLobbyAndBroadcastsToEveryoneDto = "ServerPutsClientInLobbyAndBroadcastsToEveryoneDto",
     AdminRequestsEndQuestionDto = "AdminRequestsEndQuestionDto",
     AdminRequestsNextQuestionDto = "AdminRequestsNextQuestionDto",
@@ -95,6 +95,7 @@ export enum StringConstants {
     ClientEntersLobbyDto = "ClientEntersLobbyDto",
     ServerConfirmsDto = "ServerConfirmsDto",
     ServerSendsErrorMessageDto = "ServerSendsErrorMessageDto",
+    ServerShowsResultsDto = "ServerShowsResultsDto",
     ServerTellsPlayersGameStartedDto = "ServerTellsPlayersGameStartedDto",
 }
 
