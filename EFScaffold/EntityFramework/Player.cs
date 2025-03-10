@@ -7,6 +7,7 @@ public class Player
     public string? GameId { get; set; }
 
     public string Nickname { get; set; } = null!;
+    public int? Score { get; set; }
 
     public virtual Game? Game { get; set; }
 

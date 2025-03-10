@@ -59,6 +59,23 @@ export interface ClientEntersLobbyDto extends BaseDto {
     nickname?: string;
 }
 
+export interface AdminEndsGameDto extends BaseDto {
+    gameId?: string;
+}
+
+export interface FinalGameResultsDto extends BaseDto {
+    gameId?: string;
+    players?: PlayerFinalResultDto[];
+    winners?: PlayerFinalResultDto[];
+    eventType?: string;
+}
+
+export interface PlayerFinalResultDto {
+    playerId?: string;
+    nickname?: string;
+    score?: number;
+}
+
 export interface ServerConfirmsDto extends BaseDto {
     success?: boolean;
 }
@@ -93,6 +110,8 @@ export enum StringConstants {
     AdminRequestsNextQuestionDto = "AdminRequestsNextQuestionDto",
     AdminStartsGameDto = "AdminStartsGameDto",
     ClientEntersLobbyDto = "ClientEntersLobbyDto",
+    AdminEndsGameDto = "AdminEndsGameDto",
+    FinalGameResultsDto = "FinalGameResultsDto",
     ServerConfirmsDto = "ServerConfirmsDto",
     ServerSendsErrorMessageDto = "ServerSendsErrorMessageDto",
     ServerShowsResultsDto = "ServerShowsResultsDto",
