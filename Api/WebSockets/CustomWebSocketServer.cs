@@ -12,10 +12,10 @@ public class CustomWebSocketServer(IConnectionManager manager, ILogger<CustomWeb
     public void Start(WebApplication app)
     {
         app.MapGet("/", () => "Hello from WebSocket server");
-        var port = GetAvailablePort(8080);
-        Environment.SetEnvironmentVariable("PORT", port.ToString());
+        var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
         var url = $"ws://0.0.0.0:{port}";
         var server = new WebSocketServer(url);
+
 
         server.Start(socket =>
         {

@@ -69,8 +69,9 @@ public class Program
         }
 
         // 11. Задаємо порт для Web API (щоб не конфліктувати з портом WebSocket)
+        var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
         app.Urls.Clear();
-        app.Urls.Add("http://*:5001");
+        app.Urls.Add($"http://*:{port}");
 
         // 12. Запускаємо додаток
         app.Run();
