@@ -48,10 +48,21 @@ public class Program
             conf.DocumentProcessors.Add(new AddAllDerivedTypesProcessor());
             conf.DocumentProcessors.Add(new AddStringConstantsProcessor());
         });
+// 1. Додаємо CORS-сервіси
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
 
         // 7. Створюємо та налаштовуємо WebApplication
         var app = builder.Build();
-
+        app.UseCors("AllowAll");
         // 8. Публікуємо OpenAPI (Swagger) + генеруємо TS-клієнт
         app.UseOpenApi();
         app.GenerateTypeScriptClient("/../client/src/generated-client.ts").GetAwaiter().GetResult();
